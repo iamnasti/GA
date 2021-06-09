@@ -1,13 +1,14 @@
-#include <stdio.h>
+# include <stdio.h>
 # include <iostream>
-#include <gmp.h>
-#include <vector>
+# include <gmp.h>
+# include <vector>
+#include <thread>
 # include <cmath>
-#include <algorithm>
-#include <vector>
-#include <gmp.h>
-#include <math.h>
-#include <cassert>
+# include <algorithm>
+# include <vector>
+# include <gmp.h>
+# include <math.h>
+# include <cassert>
 # include <cstdlib>
 # include <iostream>
 # include <iomanip>
@@ -22,11 +23,12 @@
 
 using namespace std;
 
-# define POPSIZE 2000
-# define MAXGENS 2000
+# define POPSIZE 1000
+# define MAXGENS 3000
 # define PCROSSOVER 1
 # define PXOVER 1
 # define PMUTATION 1
+
 
 class BigInt {
 public:
@@ -59,12 +61,6 @@ public:
   ~BigInt(){
     mpz_clear(v);
   }
-
-  // BigInt operator+(const mpz_t& b) const {
-  //   BigInt res;
-  //   mpz_add(res.v, v, b);
-  //   return res;
-  // }
 
   BigInt operator+(const BigInt& b) const {
     BigInt res;
@@ -108,16 +104,9 @@ public:
     return mpz_probab_prime_p(v, 40) > 0;
   }
 
-  // void set_next_prime(const BigInt& b){
-  //   // cout << "before" <<endl;
-  //   mpz_nextprime(v, b.v);
-  //   // cout << "after" <<endl;
-  // }
-
-   void set_next_prime(){
-    // cout << "before" <<endl;
+  void set_next_prime(){
     mpz_nextprime(v,v);
-    // cout << "after" <<endl;
+
   } 
 
   BigInt random_num() const{
@@ -200,10 +189,6 @@ public:
       return *this;
   }
 
-  // BigInt& operator=(const mpz_t& b) {
-  //     mpz_set(v,b);
-  //     return *this;
-  // }
   bool operator==(const BigInt& b) const {      
       return mpz_cmp(v,b.v) == 0;
   }
@@ -222,9 +207,6 @@ public:
     else {return false;}
   }
 
-
-
-
   friend std::ostream& operator<<(std::ostream &os, const BigInt &b) {
     char s[256];
     mpz_get_str(s,10,b.v);
@@ -238,38 +220,33 @@ private:
 
 };
 
-struct genotype
-{
+struct genotype {
   vector<BigInt> gene;
   BigInt fitness;
   BigInt rfitness;
   BigInt cfitness;
 
   genotype() {
-    fitness = 864;
+    fitness = 0;
     rfitness = 0.0;
     cfitness = 0.0;
   }
 };
 
+bool sort_by_fitness( const genotype & lhs, const genotype & rhs ) {
+   return lhs.fitness < rhs.fitness;
+}
+bool compare_by_fitness( const genotype & lhs, const genotype & rhs ) {
+   return lhs.fitness == rhs.fitness;
+}
+
+
+class common{
+  public:
+
+
 vector<struct genotype> population;
 vector<struct genotype> newpopulation;
-vector <BigInt> tobit(BigInt n);
-void initialize (BigInt N);
-BigInt tobeten(vector<BigInt> &x);
-void evaluate (BigInt N );
-void printvector(vector<BigInt> a);
-void check();
-int checksolution();
-bool sort_by_fitness( const genotype & lhs, const genotype & rhs );
-void selector ();
-void crossover (BigInt N);
-void Xover ( int one, int two, BigInt N);
-vector<BigInt> made_crom_with_prop(vector<BigInt> num);
-bool checkpropety(BigInt x);
-bool compare_by_fitness( const genotype & lhs, const genotype & rhs );
-void add_new_chrome(BigInt N);
-// void evaluate_for_one (genotype gen);
 
 void GeneSizes() {
   for (int i = 0; i < population.size(); i++) {
@@ -303,96 +280,60 @@ vector <BigInt> tobit(BigInt n){
       n /= 2;
   }
    reverse(vec.begin(), vec.end());
-   if (vec.size() > 1000) {
-    for (int i = 0; i < 200; i++) {
-    }
-  }
-  
   return vec;
 }
 
-void full_init(){
-  map <int, int> probability = {
-    {6, 10},
-    {5, 10},
-    {4, 50},
-    {3, 50}
-  };
-  for (const auto& [digit_size, count] : probability) {
-    cout << "count " << count << "digit " << digit_size <<  endl;
-    int low_bonder = pow(10, digit_size-1);
-    int high_bonder = pow(10, digit_size);
-    for (int i = 0; i < count; i++){
-      BigInt num_1, num_2;
-
-      num_2 = rand() % (high_bonder-low_bonder) + low_bonder;
-      num_2.set_next_prime();
-          cout << "i: " << i << ": " << num_1 << endl;
-       
-    }
-  }
-}
-
-
-void initialize (BigInt N){
+void initialize (BigInt N, int number_of_flow){
   int i;
-  int j;
+  int j, length = 0;
+   map <int, int> probability;
   vector<BigInt> Nbit = tobit(N);
-  int size_chrom;
-  BigInt zero, first_chrom_in_ten;
+  int size_chrom, sum;
+  BigInt zero, first_chrom_in_ten, N_root;
+   unsigned int two = 2;
   vector<BigInt> num;
-//   size_chrom = Nbit.size()/2;
-//   // cout << "Lenght of chromosome = " << Nbit.size()/2 << endl;
-//   // for (int j = 0 ; j < Nbit.size() ; j++){
-//   //     gmp_printf("%Zd", Nbit[j].getValue());
-//   // }
-// //  cout << endl;
-// //  cout << "first_chrom" << endl;
-//  vector<BigInt> first_chrom (size_chrom, zero);
-//  first_chrom[0] = 1;
-//  for (j = 0 ; j < first_chrom.size() ; j++){
-//       gmp_printf("%Zd", first_chrom[j]);
-//   }
-//    cout << endl;
-  // cout << "first chrome in ten" << tobeten(first_chrom) << endl;
-  // first_chrom_in_ten = tobeten(first_chrom)-1;
-  // cout << "first_chrom_in_ten" << first_chrom_in_ten << endl;
-  // int size_probability = 1;
-  // while ((first_chrom_in_ten/=10)>zero) size_probability ++;
-  // vector<int> probability(size_probability - 2, 0);
-  // probability[0] = probability[1] = MAXGENS * 30/100;
-  // for (int k = 2; k< probability.size(); k++){
-  //   probability[k] = MAXGENS * 40/(probability.size() - 2)/100;
-  // }
-  // for (int k = 0; k< probability.size(); k++){
-  //   cout << "key: " << k << " value: " << probability[k] << endl;
-  // }
-  // cout << endl;
-  // cout << "size_probability" << size_probability-2 << endl;
-
-  // for (int i = 0; i < probability.size(); i++){
-  //   vector<BigInt> first_chrom (probability.size() - i + 2, zero);
-  //   first_chrom[0] = 1;
-  //   for (int j = 0; j < probability[i] ; j++){
-  //       cout << tobeten(first_chrom) -1 << " , ";
-  //   }
-  // }
-  // BigInt i_1, max;
-  // unsigned int two;
-  // two = 2;
-  // // mpz_root(max_mp,N.getValue(), two);
-  // // gmp_printf("%Zd", max_mp);
-  // max = N.root(two);
-  ifstream in("initial_number.txt");
-  string number{};
-  while (in) {
-    in >> number;
-    BigInt ex(number);
-    cout << num.size() << " : " << ex << endl;
-    num.emplace_back(ex);    
+  N_root = N.root(two);
+  cout << N_root << endl;
+  while (N_root > zero) {
+    N_root /=10;
+    length++;
   }
-  cout << num[0] << " 6: " << num[70] << endl;
-  for ( j = 2; j < POPSIZE+2; j++ )
+  cout << " length " << length << endl;
+  
+  for (int k = 2; k <= (length -2) ; k++){
+    probability[k] = POPSIZE * 40 / (length - 2) / 100;
+  }
+  probability[length-1] = probability[length] = POPSIZE*30/100;
+  cout << "probability"  << endl;
+  for (const auto& [digit_size, count] : probability) {
+     cout << "count " << count << "digit " << digit_size <<  endl;
+     sum += count;
+  }
+  int need_to_add =  - sum;
+  if (need_to_add != 0){
+    probability[length + 1] = need_to_add;
+  }
+  for (const auto& [digit_size, count] : probability) {
+      if (digit_size != length + 1){
+          int low_bonder = pow(10, digit_size-1);
+          int high_bonder = pow(10, digit_size);
+        
+          for (int i = 0; i < count ; i++){
+          BigInt num_2;
+              num_2 = rand() % (high_bonder-low_bonder) + low_bonder;
+              num_2.set_next_prime();
+              num.push_back(num_2);}
+        }
+    else{
+        for (int i = 0; i < count ; i++){
+            BigInt num_1;
+            num_1 = rand()%((int)pow(10, (length - 2)) - 200) + 200;
+            num_1.random_num();
+            // cout << "num_1 : " << num_1 << endl;
+            num_1.set_next_prime();
+            num.push_back(num_1);}}
+  }
+  for ( j = 0; j < num.size(); j++ )
   {
     genotype gt;
 
@@ -403,7 +344,7 @@ void initialize (BigInt N){
       gt.gene = tobit(num[j]);
       population.push_back(gt);
     }
-//   cout << "population.size " << population.size() << endl;
+  cout << "population.size " << population.size() << endl;
   return;
 }
 
@@ -427,8 +368,6 @@ BigInt tobeten(vector<BigInt> &x){
     return myNumInInteger;
 }
 
-
-// расчёт фитнесс-функции для каждой хромосомы в популяции
 void evaluate (BigInt N )
 {
   int gen;
@@ -450,53 +389,49 @@ void evaluate (BigInt N )
   return;
 }
 
-// void evaluate_for_one (genotype gen)
+// расчёт фитнесс-функции для каждой хромосомы в популяции
+// void evaluate (BigInt N, int flow, int part)
 // {
-//   BigInt myNumInInteger;
-//   BigInt zero;
-//   myNumInInteger = tobeten(gen.gene);
-//   // cout << "myNumInInteger" << myNumInInteger << endl;
-//   gen.fitness = N% myNumInInteger;
-//   // cout << "population[member].fitness " << population[member].fitness << endl;
-
+//   int gen;
+//   int member, diff;
+//   vector<BigInt> x;
+//   if (population.size()%flow != 0 ){
+//       cout << "population.size()/flow" << population.size() << " , " << population.size()/flow << endl;
+//       diff = population.size() - flow*(population.size()/flow);
+//   }
+//   cout << "diff: " << diff << endl;
+//   int low_b = (part - 1)*population.size()/flow;
+//   cout << "low_b: " << low_b << endl;
+//   int high_b = part * population.size()/flow;
+//   cout << "high_b: " << high_b << endl;
+//   for (member = low_b; member < high_b ; member++ )
+//   {
+//     BigInt myNumInInteger;
+//     BigInt zero;
+//     x = population[member].gene;
+//     myNumInInteger = tobeten(x);
+//     // cout << "myNumInInteger" << myNumInInteger << endl;
+//     if (!(myNumInInteger == zero) ){
+//     population[member].fitness = N% myNumInInteger;
+//     }
+//     else { population.erase(population.begin() + member); }
+//     // cout << "population[member].fitness " << population[member].fitness << endl;
+//   }
+//   cout << "member" << member << endl;
 //   return;
 // }
 
-
-void printvector(vector<BigInt> a){
-  cout << "print vector" << endl;
-  for (int i = 0; i<a.size(); i++){
-      cout << a[i] << ", " << endl;
-  }
-  cout << endl;
-}
-
-void printpopulation() {
+void printpopulation() 
+{
     cout << population.size() << endl;
     for (int i = 0; i< population.size(); i++)
     {
 
       cout << i << " genes value " << endl;
-      // if (i == 13) {
-      //   auto a = tobeten(population[i].gene).getValue();
-      //   cout << endl;
-      // }
-      cout << "in ten " << tobeten(population[i].gene) << " in bit " << endl;
-      // for (int j = 0 ; j < population[i].gene.size(); j++)
-      // {
-      //   cout << "i:" << i << " j:" << j << endl;
-      //   if (i == 12 && j == 4) {
-      //     cout << endl;
-      //     auto w = population[i].gene[j];
-      //     cout << w << endl;
-      //   }
-      // gmp_printf("%Zd",population[i].gene[j].getValue());
-      // }
-      
+      cout << "in ten " << tobeten(population[i].gene) << " in bit " << endl;  
       cout << " fitness " << population[i].fitness << " cfi" << endl;
     }
 }
-
 void check(){
   BigInt zero, one;
   one = 1;
@@ -506,6 +441,16 @@ void check(){
       population.erase(population.begin() + i);
     }
   }
+}
+vector<BigInt> made_crom_with_prop(vector<BigInt> num){
+  // BigInt new_num;
+  // cout << tobeten(num) << endl;
+  auto new_num = tobeten(num);
+  new_num.set_next_prime();
+  // cout << "NEW CHROM CHECK" << endl;
+  // cout << tobeten(num) << endl;
+  // cout << new_num << endl;
+  return tobit(new_num);
 }
 
 int checksolution(){
@@ -520,32 +465,6 @@ int checksolution(){
   return -100;
 }
 
-void keep_the_best(){
-  cout << "keep_the_best" << endl;
-  int cur_best;
-  int mem;
-  int i;
-  // printpopulation();
-  cout << "___________________________________" << endl;
-  cur_best = 0;
-
-  for ( mem = 0; mem < POPSIZE; mem++ )
-  {
-    // cout << "POPSIZE" << POPSIZE << endl;
-    // cout << "population[POPSIZE].fitness" << population[POPSIZE].fitness << endl;
-    if ( population[POPSIZE].fitness > population[mem].fitness )
-    {
-      cur_best = mem;
-      population[POPSIZE].fitness = population[mem].fitness;
-    }
-  }
-  // printpopulation();
-}
-
-bool sort_by_fitness( const genotype & lhs, const genotype & rhs )
-{
-   return lhs.fitness < rhs.fitness;
-}
 
 void selector ()
 {
@@ -556,23 +475,10 @@ void selector ()
   int mem;
   double p;
   BigInt sum;
-  // for ( mem = 0; mem < POPSIZE; mem++ )
-  // {
-  //   sum = sum + population[mem].fitness;
-  // }
-  // for ( mem = 0; mem < POPSIZE; mem++ )
-  // {
-  //   population[mem].rfitness = population[mem].fitness / sum;
-  // }
-  // population[0].cfitness = population[0].rfitness;
-  // for ( mem = 1; mem < POPSIZE; mem++ )
-  // {
-  //   population[mem].cfitness = population[mem-1].cfitness +       
-  //     population[mem].rfitness;
-  // }
+
   for ( i = 0; i < population.size(); i++ )
   { 
-    p = rand()%100/100.0;
+    p = rand()%100/100.0; // [0,1]
     // cout << "p " << p << endl;
     if ( p < PCROSSOVER)
     {
@@ -602,10 +508,10 @@ void crossover (BigInt N)
 
       if ( first % 2 == 0 )
       {
-        // cout << " one " << one << "mem " << mem << endl; 
+        cout << " one " << one << "mem " << mem << endl; 
         // cout << "Xover начался" << endl;
         Xover ( one, mem, N);
-        // cout << "Xover закончился" << endl;
+        cout << "Xover закончился" << endl;
       }
       else
       {
@@ -649,9 +555,6 @@ void Xover ( int one, int two, BigInt N)
   }
   else if (diff > 0){
     for (int k = 0; k <diff; k++){
-// (gdb) p k <---------------------------------------------------------------
-// $2 = -13216
-
     newpopulation[two].gene.insert(newpopulation[two].gene.begin(), zero);
     }
   } 
@@ -711,76 +614,14 @@ for ( i = 0; i < point; i++ )
   // }
   // evaluate_for_one(popmutatetwo);
   population.push_back(popmutatetwo);
-  cout << "popmutateone : " << tobeten(popmutateone.gene) << endl;
-  cout << "popmutatetwo : " << tobeten(popmutatetwo.gene) << endl; 
+  // cout << "popmutateone : " << tobeten(popmutateone.gene) << endl;
+  // cout << "popmutatetwo : " << tobeten(popmutatetwo.gene) << endl; 
   // << "popmutatetwo : " <<  popmutatetwo.gene.size() << endl;
   // cout << "FIRST" << tobeten(popmutateone.gene) << endl;
   population.push_back(popmutateone);
   // cout << "SECOND" << tobeten(popmutatetwo.gene) << endl;
   return;
 }
-
-vector<BigInt> made_crom_with_prop(vector<BigInt> num){
-  // BigInt new_num;
-  cout << tobeten(num) << endl;
-  auto new_num = tobeten(num);
-  new_num.set_next_prime();
-  cout << "NEW CHROM CHECK" << endl;
-  // cout << tobeten(num) << endl;
-  cout << new_num << endl;
-  return tobit(new_num);
-
-  // BigInt zero;
-  // // auto t = time(NULL);
-  // // cout << "time(NULL) : " << t;
-  // // srand(t);
-  //   if (checkpropety(tobeten(num)) ){
-  //       return num;
-  //    }
-  //   else {
-  //     BigInt number, random;
-  //     do {
-  //         random = rand();
-  //         number= (random % (N/6))*6 + 1;
-  //       } while (!number.is_prime());
-  //       return tobit(number);
-      // if((tobeten(num)/ 6 )==zero){
-      //   BigInt number, random;
-        
-      //   // number= 6*(rand() % (N/6)) + 1;
-      //   do {
-      //     random = rand();
-      //     number= (random % (N/6))*6 + 1;
-      //   } while (!number.is_prime());
-      //   return tobit(number);
-      // }
-      // else{ 
-      //   int random_number;
-      //   vector<BigInt> a;
-      //   do{
-      //     random = rand();
-      //     number= (random % (N/6))*6 + 1;
-      //     // a.push_back((tobeten(num)/ 6 ) * 6 + 1);
-      //     // a.push_back((tobeten(num)/ 6 ) * 6 - 1);
-      //     // random_number = rand() % 2;
-      //   }
-      //   while (!a[random_number].is_prime());
-      //   return tobit(a[random_number]);
-      
-    // }
-}
-
-bool checkpropety(BigInt x){
-  // x = 6*m+1
-  // m = x -1 / 6
-  BigInt m, zero;
-  m = x - 1;
-  if (m % 6 == zero && m.is_prime()){
-    return 1;
-  }
-  return 0;
-}
-
 void mutate (BigInt N)
 {
   int i;
@@ -790,7 +631,7 @@ void mutate (BigInt N)
   one = 1;
   double x;
   // cout << "Рамер популяции " << population.size() << endl;
-  printpopulation();
+  // printpopulation();
   for ( i = 0; i < population.size(); i++ )
   {
   x = rand()%100/100.0;
@@ -802,12 +643,12 @@ void mutate (BigInt N)
       int last_value = population[i].gene.size()-1;
       int random_number = 1 + rand() % last_value;
       // cout << "random_number " << random_number << endl;
-      cout << i << endl;
-      cout << population.size();
-      cout << population[i].gene.size() << endl;
+      // cout << i << endl;
+      // cout << population.size();
+      // cout << population[i].gene.size() << endl;
       vector<BigInt> copy  = population[i].gene;
       // mpz_xor(res, copy[random_number].getValue(), one.getValue());
-      cout << random_number << " check "<< copy.size() << endl;
+      // cout << random_number << " check "<< copy.size() << endl;
       copy[random_number] = copy[random_number].xor_num(one);
       population[i].gene = made_crom_with_prop(copy);
       // cout << "NEW AFTER MUTATE   " << tobeten(population[i].gene) << endl;
@@ -815,11 +656,6 @@ void mutate (BigInt N)
   }
   // cout << "количество мутирующих " << k << endl;
   return;
-}
-
-bool compare_by_fitness( const genotype & lhs, const genotype & rhs )
-{
-   return lhs.fitness == rhs.fitness;
 }
 
 void add_new_chrome(BigInt N){
@@ -838,12 +674,8 @@ void add_new_chrome(BigInt N){
       unsigned int two;
       two = 2;
       one = 1;
-      // mpz_root(max_size,N.getValue(), two); 
       maxim = N.root(two);
       while (t == zero | t == one){
-
-        // mpz_random (rop, 500);
-        // t = rop;
         t = t.random_num()% maxim;
       }
       // cout << "t " << t << endl;
@@ -859,55 +691,15 @@ void add_new_chrome(BigInt N){
   }
 }
 
+void Run(BigInt N, int number_of_flow) {
 
-int main() {
-  // BigInt n;
-  // n = 92;
-  // cout << n << endl;
-  // n.set_next_prime();
-  // cout << n << endl;
-  // return 0;
-    // mpz_t n;
-    // mpz_init(n);
-    // mpz_set_ui(n, 2);
-    // for (size_t i = 0; i < 1000; i++) { // first 1000 primes
-    //     mpz_nextprime(n, n);
-    //     cout << "The " << (i + 1) << "th " << " prime is " << mpz_get_ui(n) << endl;
-    // }
-    // return 0;
-
-  // mpz_t a,b;
-  // mpz_init_set_ui(a,23);
-  // gmp_printf("%Zd", a);
-  // mpz_init_set_ui(b, 23);
-  // mpz_nextprime(b,a);
-  // gmp_printf("%Zd", b);
-//     mpz_t n;
-//     mpz_init(n);
-//     mpz_set_ui(n, 2);
-//     for (size_t i = 0; i < 1000; i++) { // first 1000 primes
-//         mpz_nextprime(n, n);
-//         cout << "The " << (i + 1) << "th " << " prime is " << mpz_get_ui(n) << endl;
-//     }
-// return 0;
-
-  // full_init();
-  // return 0;
-  // auto t = time(NULL); // 1620675012
-  // cout << "time(NULL) : " << t;
-  srand(time(NULL));
-
-  BigInt N("5325280633");
-  
+  // TODO N
   int generation;
-  // N = 6984871;
-  // N = 10909343;
-  // N = 29835457;
-  // N = 392913607;
-  // N = "5325280633";
-  initialize(N);
+  initialize(N, number_of_flow);
+//   printpopulation();
   evaluate(N);
-  cout << "__initialization__" << endl;
+  printpopulation();
+cout << "__initialization__" << endl;
   // printpopulation();
   for ( generation = 0; generation <= MAXGENS; generation++ )
   {
@@ -933,6 +725,7 @@ int main() {
   // return 0;
   // cout << "__keep_the_best__: " << generation << endl;
   sort(population.begin(), population.end(), sort_by_fitness);
+  // return ;
   // cout << "__keep_the_best__" << generation << endl;
   // printpopulation();
   // cout << "__selector__start" << endl;
@@ -961,12 +754,13 @@ int main() {
   evaluate (N);
   // cout << "__sort__" << endl;
   sort(population.begin(), population.end(), sort_by_fitness);
+  // может быть стоит оставить одинаковые
   population.erase(std::unique(population.begin(), population.end(), compare_by_fitness), population.end());
   // printpopulation();
   add_new_chrome(N);
   // printpopulation();
   check();
-  cout << "NEWPOPILATION SIZE: " << newpopulation.size() << endl;
+  // cout << "NEWPOPILATION SIZE: " << newpopulation.size() << endl;
   newpopulation.clear();
   cout << "N = " << N << endl;
   int num_solution_1 = checksolution();
@@ -989,5 +783,27 @@ int main() {
   // srand(time(NULL));
   // cout<< "0" << rand()%100/100.0 << endl;
   // cout << "1" << rand()%100/100.0 << endl;
+}
+};
+
+void Run(string number, int number_of_flow) {
+    BigInt N(number);
+    common c;
+    c.Run(N, number_of_flow);
+}
+
+int main() {
+  srand(time(NULL));
+  string N = "6984871";
+//   //file_name - для проверок
+// //   string filename = "initial_number.txt";
+//   common c,d;
+//   c.Run(N, filename); 
+  int number_of_flow = 2;
+  thread th1(Run, N, number_of_flow);
+  thread th2(Run, N, number_of_flow);
+
+  th1.join();
+  th2.join();
   return 0;
 }
